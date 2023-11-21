@@ -1,0 +1,194 @@
+@page "/Cobros"
+@page "/Cobros/{CobrosId:int}"
+@inject HttpClient httpClient
+
+<EditForm Model="cobros"> 
+    <DataAnnotationsValidator />
+
+    <div class="container">
+        <div class="card shadow-lg">
+            <div class="card-header">
+                <h3>Registro de cobros.</h3>
+            </div>
+
+            <div class="card-body">
+
+                <div class="col-xs-12 col-sm-12 col-md-8 col-lg-6 col-xl-4">
+                    <label>Cobros Id:</label>
+                    <div class="input-group mb-3">
+                        <InputNumber @bind-Value="cobros.CobroId" class="form-control" aria-describedby="BotonBuscar" />
+                        <button class="btn btn-outline-primary" type="button" id="BotonBuscar" @onclick="BuscarCobro">
+                            <i class="oi oi-magnifying-glass"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="Fecha">Fecha:</label>
+                    <InputDate @bind-Value="cobros.Fecha" class="form-control" />
+                    <ValidationMessage For="() => cobros.Fecha" />
+                </div>
+
+
+                <table class="table">
+                    <thead>
+
+                <div class="mb-3">
+                    <label class="form-label" for="Nombres">Nombres:</label>
+                    <InputSelect class="form-select" @bind-Value="id">
+                        <option value="0" disabled selected>Selecciona un cliente</option>
+                        @foreach (var cliente in L_Clientes)
+                        {
+                            <option value="@cliente.ClienteId">@cliente.Nombres</option>
+                        }
+                    </InputSelect>
+                </div>
+                    <tr>
+                            <th>Id</th>
+                            <th>Fecha</th>
+                            <th>Monto</th>
+                            <th>Balance</th>
+                            <th>Cobrado</th>
+                            <th>Pagar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in L_Ventas.Where(v => v.ClienteId == id ))
+                        {
+                            <tr>
+                                <td>@item.VentaId</td>
+                                <td>@item.Fecha</td>
+                                <td>@item.Monto</td>
+                                <td>@item.Balance</td>
+                                <td></td>
+                                <td>
+                                <input class="form-check-input" type="checkbox" id="Pagar" @bind-value="ventas.Pagar"> 
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                <div>
+                     <label class="form-label" for="Observacion">Observaci&oacute;n:</label>
+                     <InputTextArea class="form-control" @bind-Value="cobrosDetalle.Observaciones"></InputTextArea>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+
+    [Parameter]
+
+
+    public int CobrosId { get; set; }
+    public Cobros cobros { get; set; } = new Cobros();
+    public Clientes clientes { get; set; } = new Clientes();
+    public Ventas ventas { get; set; } = new Ventas();
+
+    public bool Pagar { get; set; }
+
+    public CobrosDetalle cobrosDetalle { get; set; } = new CobrosDetalle();
+
+    public List<Cobros> L_Cobros { get; set; } = new List<Cobros>();
+    public List<Clientes> L_Clientes { get; set; } = new List<Clientes>();
+    public List<Ventas> L_Ventas { get; set; } = new List<Ventas>();
+
+    int id;
+
+
+ 
+    protected override async Task OnInitializedAsync()
+    {
+        await BuscarCobro();
+        L_Clientes = await httpClient.GetFromJsonAsync<List<Clientes>>("api/Cobros/Clientes") ?? new List<Clientes>();
+        L_Ventas = await httpClient.GetFromJsonAsync<List<Ventas>>("api/Ventas") ?? new List<Ventas>();    
+    }
+
+    private async Task BuscarCobro()
+    {
+        try
+        {
+            
+            var cobroEncontrado = await httpClient.GetFromJsonAsync<Cobros>($"api/Cobros/{CobrosId}");
+            if (cobroEncontrado != null)
+            {
+                this.cobros = cobroEncontrado;
+            }
+            else
+            {
+
+            }
+
+        }
+        catch (Exception)
+        {
+
+        }
+        ventas.Pagar = ventas.Pagar;
+    }
+
+    public async Task Buscar()
+    {
+
+        var CobroEncontrada = await httpClient.GetFromJsonAsync<Cobros>($"api/Entradas/{CobrosId}");
+
+
+        if(CobroEncontrada is not null)
+        {
+            this.cobros = CobroEncontrada;
+            StateHasChanged();
+
+        }
+
+    }
+
+    public async Task Guardar()
+        {
+            using var response = await httpClient.PostAsJsonAsync("api/Cobros", cobros);
+
+            if(!response.IsSuccessStatusCode)
+            {
+                return;
+            }
+
+            var cobroDevuelto = await response.Content.ReadFromJsonAsync<Cobros>();
+
+            if(cobroDevuelto is not null)
+            {
+                cobros = cobroDevuelto;
+                StateHasChanged();
+                Nuevo();
+
+            }
+
+        }
+
+
+            public void Nuevo()
+        {
+            this.cobros = new Cobros();
+        }
+         
+            public async Task Eliminar()
+        {
+            using var response = await httpClient.DeleteAsync($"api/Cobros/{cobros.CobroId}");
+
+            if(!response.IsSuccessStatusCode)
+            {
+                return;
+            }
+            else
+            {
+                Nuevo();
+
+            }
+        }
+
+
+
+
+
+}
