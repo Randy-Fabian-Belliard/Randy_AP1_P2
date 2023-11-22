@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Parcial2_AP1_Randy.Server.Migrations
 {
     /// <inheritdoc />
-    public partial class Inicial : Migration
+    public partial class inicial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -35,7 +35,9 @@ namespace Parcial2_AP1_Randy.Server.Migrations
                     Fecha = table.Column<DateTime>(type: "TEXT", nullable: false),
                     ClienteId = table.Column<int>(type: "INTEGER", nullable: false),
                     Monto = table.Column<double>(type: "REAL", nullable: false),
-                    Balance = table.Column<double>(type: "REAL", nullable: false)
+                    Balance = table.Column<double>(type: "REAL", nullable: false),
+                    Pagar = table.Column<bool>(type: "INTEGER", nullable: false),
+                    Cobrado = table.Column<double>(type: "REAL", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -70,18 +72,25 @@ namespace Parcial2_AP1_Randy.Server.Migrations
                     CobroId = table.Column<int>(type: "INTEGER", nullable: false),
                     VentaId = table.Column<int>(type: "INTEGER", nullable: false),
                     Observaciones = table.Column<string>(type: "TEXT", nullable: true),
-                    TotalFacturas = table.Column<int>(type: "INTEGER", nullable: false),
-                    TotalCobrado = table.Column<int>(type: "INTEGER", nullable: false),
-                    ConbroId = table.Column<int>(type: "INTEGER", nullable: true)
+                    TotalFacturas = table.Column<double>(type: "REAL", nullable: false),
+                    TotalCobrado = table.Column<double>(type: "REAL", nullable: false),
+                    Pagar = table.Column<bool>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_CobrosDetalle", x => x.DetalleId);
                     table.ForeignKey(
-                        name: "FK_CobrosDetalle_Cobros_ConbroId",
-                        column: x => x.ConbroId,
+                        name: "FK_CobrosDetalle_Cobros_CobroId",
+                        column: x => x.CobroId,
                         principalTable: "Cobros",
-                        principalColumn: "CobroId");
+                        principalColumn: "CobroId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CobrosDetalle_Ventas_VentaId",
+                        column: x => x.VentaId,
+                        principalTable: "Ventas",
+                        principalColumn: "VentaId",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.InsertData(
@@ -96,15 +105,15 @@ namespace Parcial2_AP1_Randy.Server.Migrations
 
             migrationBuilder.InsertData(
                 table: "Ventas",
-                columns: new[] { "VentaId", "Balance", "ClienteId", "Fecha", "Monto" },
+                columns: new[] { "VentaId", "Balance", "ClienteId", "Cobrado", "Fecha", "Monto", "Pagar" },
                 values: new object[,]
                 {
-                    { 1, 1000.0, 1, new DateTime(2020, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 1000.0 },
-                    { 2, 800.0, 1, new DateTime(2020, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 900.0 },
-                    { 3, 2000.0, 2, new DateTime(2020, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 2000.0 },
-                    { 4, 1800.0, 2, new DateTime(2020, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 1900.0 },
-                    { 5, 3000.0, 3, new DateTime(2020, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 3000.0 },
-                    { 6, 1900.0, 3, new DateTime(2020, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 2900.0 }
+                    { 1, 1000.0, 1, 0.0, new DateTime(2020, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 1000.0, false },
+                    { 2, 800.0, 1, 0.0, new DateTime(2020, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 900.0, false },
+                    { 3, 2000.0, 2, 0.0, new DateTime(2020, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 2000.0, false },
+                    { 4, 1800.0, 2, 0.0, new DateTime(2020, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 1900.0, false },
+                    { 5, 3000.0, 3, 0.0, new DateTime(2020, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 3000.0, false },
+                    { 6, 1900.0, 3, 0.0, new DateTime(2020, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 2900.0, false }
                 });
 
             migrationBuilder.CreateIndex(
@@ -113,9 +122,14 @@ namespace Parcial2_AP1_Randy.Server.Migrations
                 column: "ClienteId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CobrosDetalle_ConbroId",
+                name: "IX_CobrosDetalle_CobroId",
                 table: "CobrosDetalle",
-                column: "ConbroId");
+                column: "CobroId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CobrosDetalle_VentaId",
+                table: "CobrosDetalle",
+                column: "VentaId");
         }
 
         /// <inheritdoc />
@@ -125,10 +139,10 @@ namespace Parcial2_AP1_Randy.Server.Migrations
                 name: "CobrosDetalle");
 
             migrationBuilder.DropTable(
-                name: "Ventas");
+                name: "Cobros");
 
             migrationBuilder.DropTable(
-                name: "Cobros");
+                name: "Ventas");
 
             migrationBuilder.DropTable(
                 name: "Clientes");

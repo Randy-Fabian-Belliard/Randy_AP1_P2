@@ -18,6 +18,9 @@ namespace Parcial2_AP1_Randy.Server.Controllers
             _context = context;
         }
 
+
+        
+
         // GET: api/Ventas
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Ventas>>> GetVentas()

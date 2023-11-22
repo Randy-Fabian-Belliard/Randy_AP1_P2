@@ -21,5 +21,9 @@
     <ProjectReference Include="..\Shared\Parcial2_AP1_Randy.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Data\" />
+  </ItemGroup>
+
 
 </Project>
