@@ -1,194 +1,412 @@
 @page "/Cobros"
 @page "/Cobros/{CobrosId:int}"
 @inject HttpClient httpClient
+@using System.Linq
 
-<EditForm Model="cobros"> 
-    <DataAnnotationsValidator />
 
-    <div class="container">
+<EditForm Model="cobros" >
+     <DataAnnotationsValidator />
+
+     <div class="container">
         <div class="card shadow-lg">
+
             <div class="card-header">
-                <h3>Registro de cobros.</h3>
+                <h3>Registro de cobros</h3>
             </div>
 
             <div class="card-body">
-
                 <div class="col-xs-12 col-sm-12 col-md-8 col-lg-6 col-xl-4">
                     <label>Cobros Id:</label>
                     <div class="input-group mb-3">
                         <InputNumber @bind-Value="cobros.CobroId" class="form-control" aria-describedby="BotonBuscar" />
-                        <button class="btn btn-outline-primary" type="button" id="BotonBuscar" @onclick="BuscarCobro">
+                        <button class="btn btn-outline-primary" type="button" id="BotonBuscar" >
                             <i class="oi oi-magnifying-glass"></i>
                         </button>
                     </div>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label" for="Fecha">Fecha:</label>
-                    <InputDate @bind-Value="cobros.Fecha" class="form-control" />
-                    <ValidationMessage For="() => cobros.Fecha" />
+                <div class="col-3">
+                        <label class="form-label" for="Fecha">Fecha:</label>
+                        <InputDate @bind-Value="cobros.Fecha" class="form-control" />
+                        <ValidationMessage For="() => cobros.Fecha" />
                 </div>
 
+                @*DETALLE*@
+                <fieldset class="border-success border border-1">
+                    <div class="col-3">
+                        <label>Clientes:</label>
+                        <InputSelect class="form-select" @bind-Value="ClienteSeleccionado" @onchange="OnClienteSeleccionadoChanged" >
+                            <option value="0" disabled selected> [Seleccione un cliente] </option>
+                            @foreach (var cliente in listaClientes)
+                            {
+                                <option value="@cliente.ClienteId">@cliente.Nombres</option>
+                            }
+                        </InputSelect>
+                    </div>
 
-                <table class="table">
-                    <thead>
+                    <div class="col-3">
+                        <label>Ventas:</label>
+                        <InputSelect class="form-select" @bind-Value="VentaSeleccionada">
+                            <option value="0" disabled selected> [Seleccione una venta del cliente] </option>
+                            @foreach (var venta in listaVentas.Where(v => v.ClienteId == ClienteSeleccionado && v.Balance > 0))
+                            {
+                                <option value="@venta.VentaId">@venta.Balance</option>
+                            }
+                        </InputSelect>
+                    </div>
 
-                <div class="mb-3">
-                    <label class="form-label" for="Nombres">Nombres:</label>
-                    <InputSelect class="form-select" @bind-Value="id">
-                        <option value="0" disabled selected>Selecciona un cliente</option>
-                        @foreach (var cliente in L_Clientes)
-                        {
-                            <option value="@cliente.ClienteId">@cliente.Nombres</option>
-                        }
-                    </InputSelect>
-                </div>
-                    <tr>
-                            <th>Id</th>
-                            <th>Fecha</th>
-                            <th>Monto</th>
-                            <th>Balance</th>
-                            <th>Cobrado</th>
-                            <th>Pagar</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in L_Ventas.Where(v => v.ClienteId == id ))
-                        {
-                            <tr>
-                                <td>@item.VentaId</td>
-                                <td>@item.Fecha</td>
-                                <td>@item.Monto</td>
-                                <td>@item.Balance</td>
-                                <td></td>
-                                <td>
-                                <input class="form-check-input" type="checkbox" id="Pagar" @bind-value="ventas.Pagar"> 
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-                <div>
-                     <label class="form-label" for="Observacion">Observaci&oacute;n:</label>
-                     <InputTextArea class="form-control" @bind-Value="cobrosDetalle.Observaciones"></InputTextArea>
-                </div>
+                    <div class="col-6">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Id</th>
+                                    <th>Fecha</th>
+                                    <th>Monto</th>
+                                    <th>Balance</th>
+                                    <th>Cobrado</th>
+                                    <th>Pagar</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (VentaSeleccionada != 0 && listaVentas.Any(v => v.VentaId == VentaSeleccionada && v.ClienteId == ClienteSeleccionado ))
+                                {
+                                    
+                                    var ventaSeleccionada = listaVentas.First(v => v.VentaId == VentaSeleccionada);
+                                    <tr>
+                                        
+                                        
+                                        <td>@ventaSeleccionada.VentaId</td>
+                                        <td>@ventaSeleccionada.Fecha</td>
+                                        <td>@ventaSeleccionada.Monto</td>
+                                        <td>@ventaSeleccionada.Balance</td>
+                                        <td>@cobrosDetalle.Cobrado</td>
+                                      
 
+                                        <td>
+                                        <input class="form-check-input" type="checkbox" id="Pagar" @bind-value="cobrosDetalle.Pagar" @onclick="() => ActualizarCobrado(ventaSeleccionada)"> 
+                                        </td>
+                                       @*Boton agregar *@
+                                        <div class="col-2">
+                                                <br>
+                                                <button type="button" class="btn btn-primary input-group-text" @onclick="AgregarDetalle">
+                                                    <span class="oi oi-plus">Agregar</span>
+                                                </button>
+                                            </div>
+                                        <div>
+                                            @if (ValidacionDetalle.Length > 0)
+                                            {
+                                                <label class="text-danger">@ValidacionDetalle</label>
+                                            }
+                                        </div>
+                                        <td>
+                                        
+                                        </td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="6">Seleccione un cobro pendiente.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                      
+
+                    
+
+                        @*Tabla de detalles*@ 
+                        <table class="table table-bordered table-light m-1">
+                            <thead class="thead">
+                                <tr class="table">
+                                    <th>Venta Id</th>
+                                    <th>Fecha</th>
+                                    <th>Cliente Id</th>
+                                    <th>Monto</th>
+                                    <th>Balance</th>
+                                    <th>Cobrado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var detalle in cobros.CobrosDetalle)
+                                {
+                                    <tr>
+                                    <td>@detalle.VentaId</td>
+                                    <td>@(FechaVenta(detalle.VentaId))</td>
+                                    <td>@detalle.ClienteId</td>
+                                    <td>@(MontoVenta(detalle.VentaId))</td>
+                                    <td>@(BalanceVenta(detalle.VentaId))</td>
+                                    <td>@cobrosDetalle.Cobrado</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        <div class="row justify-content-between">
+                            <div class="col-4">
+                                <label>Cantidad de facturas</label>
+                                <div class="input-group mb-3">
+                                    
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr/> 
+                </fieldset>      
             </div>
-        </div>
-    </div>
-</EditForm>
+                <div class="card-footer d-flex justify-content-center">
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-outline-primary" @onclick="Nuevo" >Nuevo <i class="oi oi-file" /></button>
+                        <button type="submit" class="btn btn-outline-success"@onclick="Guardar">Guardar <i class="oi oi-document" /></button>
+                        <button type="button" class="btn btn-outline-danger" @onclick="Eliminar">Eliminar <i class="oi oi-trash" /></button>
+                    </div>
+            </div>
+        </div>    
+     </div>
 
-@code {
 
+</EditForm> 
+
+@code
+{
     [Parameter]
-
-
-    public int CobrosId { get; set; }
-    public Cobros cobros { get; set; } = new Cobros();
-    public Clientes clientes { get; set; } = new Clientes();
-    public Ventas ventas { get; set; } = new Ventas();
-
-    public bool Pagar { get; set; }
-
+    
+     public int CobrosId { get; set; }
+     public int ClienteId { get; set; }
+     public int VentaId { get; set; }
+     public Cobros cobros { get; set; } = new Cobros();
+     public Ventas venta { get; set; } = new Ventas();
+    public Clientes cliente { get; set; } = new Clientes();
     public CobrosDetalle cobrosDetalle { get; set; } = new CobrosDetalle();
-
-    public List<Cobros> L_Cobros { get; set; } = new List<Cobros>();
-    public List<Clientes> L_Clientes { get; set; } = new List<Clientes>();
     public List<Ventas> L_Ventas { get; set; } = new List<Ventas>();
+    public List<Clientes> L_Clientes { get; set; } = new List<Clientes>();
+
+    public IEnumerable<Clientes> listaClientes { get; set; } = Enumerable.Empty<Clientes>();
+    public IEnumerable<Ventas> listaVentas { get; set; } = Enumerable.Empty<Ventas>();
+    
+    public List<Cobros> L_Cobros { get; set; } = new List<Cobros>();
+    public int ClienteSeleccionado { get; set; }
+
+    public int VentaSeleccionada { get; set; }
+
+    public string ValidacionDetalle { get; set; } = string.Empty;
+     private int previousClienteSeleccionado = 0;
+
+     private bool detalleAgregado = false;
+
+     private bool auxPagar;
 
     int id;
+    double aux;
+    double aux2;
+    int TotalFacturas;
+    double TotalCobros;
 
 
- 
+
+
     protected override async Task OnInitializedAsync()
     {
-        await BuscarCobro();
-        L_Clientes = await httpClient.GetFromJsonAsync<List<Clientes>>("api/Cobros/Clientes") ?? new List<Clientes>();
-        L_Ventas = await httpClient.GetFromJsonAsync<List<Ventas>>("api/Ventas") ?? new List<Ventas>();    
-    }
+        await CargarClientes();
+        await CargarVentas();
+       
 
-    private async Task BuscarCobro()
-    {
-        try
+        if (ClienteId > 0  )
+        {
+            this.cliente.ClienteId = ClienteId;
+            await Buscar();
+        }
+
+        if (VentaId > 0  )
         {
             
-            var cobroEncontrado = await httpClient.GetFromJsonAsync<Cobros>($"api/Cobros/{CobrosId}");
-            if (cobroEncontrado != null)
-            {
-                this.cobros = cobroEncontrado;
-            }
-            else
-            {
-
-            }
-
+            this.venta.VentaId = VentaId;
+            await Buscar();
         }
-        catch (Exception)
-        {
-
-        }
-        ventas.Pagar = ventas.Pagar;
     }
 
+ private void OnClienteSeleccionadoChanged(ChangeEventArgs args)
+    {
+        if (ClienteSeleccionado != previousClienteSeleccionado)
+        {
+            // Solo actualiza la venta si el cliente ha cambiado
+            VentaSeleccionada = 0;
+            previousClienteSeleccionado = ClienteSeleccionado;
+            StateHasChanged();
+        }
+    }
+
+    private async Task CargarClientes()
+    {
+        var clientesEncontrados = await httpClient.GetFromJsonAsync<IEnumerable<Clientes>>("api/Clientes");
+   
+        if (clientesEncontrados != null  )
+            listaClientes = clientesEncontrados;
+            
+    }
+
+    private async Task CargarVentas()
+    {
+        var ventasEncontradas = await httpClient.GetFromJsonAsync<IEnumerable<Ventas>>("api/Ventas");
+        if (ventasEncontradas != null)
+            listaVentas = ventasEncontradas;
+    }
+   
     public async Task Buscar()
     {
+        var clienteEncontrado = await httpClient.GetFromJsonAsync<Clientes>($"api/Clientes/{cliente.ClienteId}");
+        var ventasEncontradas = await httpClient.GetFromJsonAsync<Ventas>($"api/Ventas/{venta.VentaId}");
+    
 
-        var CobroEncontrada = await httpClient.GetFromJsonAsync<Cobros>($"api/Entradas/{CobrosId}");
-
-
-        if(CobroEncontrada is not null)
+        if (clienteEncontrado != null && ventasEncontradas != null)
         {
-            this.cobros = CobroEncontrada;
+            this.cliente = clienteEncontrado;
+            this.venta = ventasEncontradas;
             StateHasChanged();
-
         }
-
+        else
+        {
+ 
+        }
     }
 
-    public async Task Guardar()
+     public async Task Guardar()
+    {
+       using var response = await httpClient.PostAsJsonAsync("api/Cobros", cobros);
+        
+        if(!response.IsSuccessStatusCode)
         {
-            using var response = await httpClient.PostAsJsonAsync("api/Cobros", cobros);
+            return;
+        }
 
-            if(!response.IsSuccessStatusCode)
+        var cobroDevuelto = await response.Content.ReadFromJsonAsync<Cobros>();
+        
+        if(cobroDevuelto is not null)
+        {
+            cobros = cobroDevuelto;
+            StateHasChanged();
+            Nuevo();
+        }
+    }
+
+    public void Nuevo()
+    {
+        this.cobros = new Cobros();
+        
+        ValidacionDetalle = string.Empty;
+
+        ClienteSeleccionado = 0;
+        VentaSeleccionada = 0;
+        
+    }
+
+
+    
+    public void AgregarDetalle()
+    {
+        if (!ValidarDetalle())
+            return;
+
+    if (cobrosDetalle.Pagar)
+        {
+            cobros.CobrosDetalle.Add(new CobrosDetalle()
             {
-                return;
-            }
+                ClienteId = ClienteSeleccionado,
+                VentaId = VentaSeleccionada
+            });
+        }
+        ClienteSeleccionado = 0;
+        VentaSeleccionada = 0;
+        StateHasChanged();
+    }
 
-            var cobroDevuelto = await response.Content.ReadFromJsonAsync<Cobros>();
+        public bool  ValidarDetalle()
+    {
+        ValidacionDetalle = string.Empty;
+        if (ClienteSeleccionado <= 0)
+        {
+            ValidacionDetalle = "El cliente es oblicatorio";
+        }
 
-            if(cobroDevuelto is not null)
-            {
-                cobros = cobroDevuelto;
-                StateHasChanged();
-                Nuevo();
+        if (VentaSeleccionada <= 0)
+        {
+            ValidacionDetalle += "La venta es obligatoria";
+        }
 
-            }
+        return ValidacionDetalle.Length == 0;
+    }
 
+   public DateTime FechaVenta(int VentaId)
+    {
+        var fecha = listaVentas.FirstOrDefault(p => p.VentaId == VentaId);
+
+        return fecha!.Fecha;
+    }
+
+       public double MontoVenta(int VentaId)
+    {
+        var monto = listaVentas.FirstOrDefault(p => p.VentaId == VentaId);
+
+        return monto!.Monto;
+    }
+
+    public double BalanceVenta(int VentaId)
+    {
+        var balance = listaVentas.FirstOrDefault(p => p.VentaId == VentaId);
+
+        return balance!.Balance;
+    }
+
+
+        public void ActualizarCobrado(Ventas venta)
+    {   
+        aux2 = TotalCobros;
+        aux = cobrosDetalle.Cobrado;
+        if (cobrosDetalle.Pagar == false)
+        {
+            cobrosDetalle.Cobrado = venta.Balance;
+           // L_Ventas.Add(venta);
+            venta.Balance = 0;
+            TotalCobros += cobrosDetalle.Cobrado;
+            TotalFacturas++;
+
+
+        }
+        else
+        {
+            venta.Balance = aux;
+            cobrosDetalle.Cobrado = 0;
+            L_Ventas.Remove(venta);
+            TotalFacturas--;
+            TotalCobros -= venta.Balance;
+        }
+
+           // L_Ventas.Add(venta);
+        
+            cobrosDetalle.VentaId = venta.VentaId;
+            cobrosDetalle.TotalFacturas = TotalFacturas;
+            cobrosDetalle.TotalCobrado = TotalCobros;
+            cobrosDetalle.CobroId = cobros.CobroId;
+            
         }
 
 
-            public void Nuevo()
-        {
-            this.cobros = new Cobros();
-        }
-         
-            public async Task Eliminar()
+        public async Task Eliminar()
         {
             using var response = await httpClient.DeleteAsync($"api/Cobros/{cobros.CobroId}");
-
-            if(!response.IsSuccessStatusCode)
+            if (!response.IsSuccessStatusCode)
             {
+                
                 return;
             }
             else
-            {
                 Nuevo();
-
-            }
         }
 
 
 
 
 
+  
 }
