@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Parcial2_AP1_Randy.Shared;
 
 namespace Parcial2_AP1_Randy.Server.Controllers
 {
@@ -39,20 +40,38 @@ namespace Parcial2_AP1_Randy.Server.Controllers
                 return NotFound();
             }
 
-            var cobros = await _context.Cobros.Include(e => e.CobroDetalles).Where(e => e.CobroId == CobrosId).FirstOrDefaultAsync();
+            var cobros = await _context.Cobros.Include(e => e.CobrosDetalle).Where(e => e.CobroId == CobrosId).FirstOrDefaultAsync();
 
             if (cobros == null)
             {
                 return NotFound();
             }
 
-            foreach(var item in cobros.CobroDetalles)
+            foreach(var item in cobros.CobrosDetalle)
             {
-                Console.WriteLine($"{item.DetalleId}, {item.CobroId}, {item.VentaId}, {item.Observaciones}, {item.TotalFacturas}, {item.TotalCobrado}");
+                Console.WriteLine($"{item.DetalleId}, {item.CobroId}, {item.VentaId}, {item.TotalFacturas}, {item.TotalCobrado}");
             }
 
             return cobros;
         }
+
+        [HttpPost]
+        public async Task<ActionResult<Cobros>> PostCobros(Cobros cobros)
+        { 
+            if(!CobrosExists(cobros.CobroId))
+            {
+                _context.Cobros.Add(cobros);
+            }
+            else
+            {
+                _context.Cobros.Update(cobros);
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(cobros);
+        }
+
 
         // GET: api/Cobros/Clientes
         [HttpGet("Clientes")]

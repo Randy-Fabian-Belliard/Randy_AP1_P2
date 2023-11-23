@@ -16,7 +16,7 @@ namespace Parcial2_AP1_Randy.Server.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "7.0.12");
 
-            modelBuilder.Entity("Clientes", b =>
+            modelBuilder.Entity("Parcial2_AP1_Randy.Shared.Clientes", b =>
                 {
                     b.Property<int>("ClienteId")
                         .ValueGeneratedOnAdd()
@@ -47,36 +47,41 @@ namespace Parcial2_AP1_Randy.Server.Migrations
                         });
                 });
 
-            modelBuilder.Entity("Cobros", b =>
+            modelBuilder.Entity("Parcial2_AP1_Randy.Shared.Cobros", b =>
                 {
                     b.Property<int>("CobroId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int?>("ClienteId")
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("Fecha")
                         .HasColumnType("TEXT");
 
-                    b.HasKey("CobroId");
+                    b.Property<string>("Observacion")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
-                    b.HasIndex("ClienteId");
+                    b.HasKey("CobroId");
 
                     b.ToTable("Cobros");
                 });
 
-            modelBuilder.Entity("CobrosDetalle", b =>
+            modelBuilder.Entity("Parcial2_AP1_Randy.Shared.CobrosDetalle", b =>
                 {
                     b.Property<int>("DetalleId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("ClienteId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<double>("Cobrado")
+                        .HasColumnType("REAL");
+
                     b.Property<int>("CobroId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Observaciones")
-                        .HasColumnType("TEXT");
+                    b.Property<bool>("Pagar")
+                        .HasColumnType("INTEGER");
 
                     b.Property<double>("TotalCobrado")
                         .HasColumnType("REAL");
@@ -89,6 +94,8 @@ namespace Parcial2_AP1_Randy.Server.Migrations
 
                     b.HasKey("DetalleId");
 
+                    b.HasIndex("ClienteId");
+
                     b.HasIndex("CobroId");
 
                     b.HasIndex("VentaId");
@@ -96,7 +103,7 @@ namespace Parcial2_AP1_Randy.Server.Migrations
                     b.ToTable("CobrosDetalle");
                 });
 
-            modelBuilder.Entity("Ventas", b =>
+            modelBuilder.Entity("Parcial2_AP1_Randy.Shared.Ventas", b =>
                 {
                     b.Property<int>("VentaId")
                         .ValueGeneratedOnAdd()
@@ -108,17 +115,11 @@ namespace Parcial2_AP1_Randy.Server.Migrations
                     b.Property<int>("ClienteId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<double>("Cobrado")
-                        .HasColumnType("REAL");
-
                     b.Property<DateTime>("Fecha")
                         .HasColumnType("TEXT");
 
                     b.Property<double>("Monto")
                         .HasColumnType("REAL");
-
-                    b.Property<bool>("Pagar")
-                        .HasColumnType("INTEGER");
 
                     b.HasKey("VentaId");
 
@@ -130,98 +131,85 @@ namespace Parcial2_AP1_Randy.Server.Migrations
                             VentaId = 1,
                             Balance = 1000.0,
                             ClienteId = 1,
-                            Cobrado = 0.0,
                             Fecha = new DateTime(2020, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Monto = 1000.0,
-                            Pagar = false
+                            Monto = 1000.0
                         },
                         new
                         {
                             VentaId = 2,
                             Balance = 800.0,
                             ClienteId = 1,
-                            Cobrado = 0.0,
                             Fecha = new DateTime(2020, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Monto = 900.0,
-                            Pagar = false
+                            Monto = 900.0
                         },
                         new
                         {
                             VentaId = 3,
                             Balance = 2000.0,
                             ClienteId = 2,
-                            Cobrado = 0.0,
                             Fecha = new DateTime(2020, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Monto = 2000.0,
-                            Pagar = false
+                            Monto = 2000.0
                         },
                         new
                         {
                             VentaId = 4,
                             Balance = 1800.0,
                             ClienteId = 2,
-                            Cobrado = 0.0,
                             Fecha = new DateTime(2020, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Monto = 1900.0,
-                            Pagar = false
+                            Monto = 1900.0
                         },
                         new
                         {
                             VentaId = 5,
                             Balance = 3000.0,
                             ClienteId = 3,
-                            Cobrado = 0.0,
                             Fecha = new DateTime(2020, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Monto = 3000.0,
-                            Pagar = false
+                            Monto = 3000.0
                         },
                         new
                         {
                             VentaId = 6,
                             Balance = 1900.0,
                             ClienteId = 3,
-                            Cobrado = 0.0,
                             Fecha = new DateTime(2020, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Monto = 2900.0,
-                            Pagar = false
+                            Monto = 2900.0
                         });
                 });
 
-            modelBuilder.Entity("Cobros", b =>
+            modelBuilder.Entity("Parcial2_AP1_Randy.Shared.CobrosDetalle", b =>
                 {
-                    b.HasOne("Clientes", null)
-                        .WithMany("Cobros")
-                        .HasForeignKey("ClienteId");
-                });
+                    b.HasOne("Parcial2_AP1_Randy.Shared.Clientes", null)
+                        .WithMany("CobrosDetalle")
+                        .HasForeignKey("ClienteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-            modelBuilder.Entity("CobrosDetalle", b =>
-                {
-                    b.HasOne("Cobros", null)
-                        .WithMany("CobroDetalles")
+                    b.HasOne("Parcial2_AP1_Randy.Shared.Cobros", null)
+                        .WithMany("CobrosDetalle")
                         .HasForeignKey("CobroId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Ventas", null)
-                        .WithMany("CobrosDetalles")
+                    b.HasOne("Parcial2_AP1_Randy.Shared.Ventas", null)
+                        .WithMany("CobrosDetalle")
                         .HasForeignKey("VentaId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Clientes", b =>
+            modelBuilder.Entity("Parcial2_AP1_Randy.Shared.Clientes", b =>
                 {
-                    b.Navigation("Cobros");
+                    b.Navigation("CobrosDetalle");
                 });
 
-            modelBuilder.Entity("Cobros", b =>
+            modelBuilder.Entity("Parcial2_AP1_Randy.Shared.Cobros", b =>
                 {
-                    b.Navigation("CobroDetalles");
+                    b.Navigation("CobrosDetalle");
                 });
 
-            modelBuilder.Entity("Ventas", b =>
+            modelBuilder.Entity("Parcial2_AP1_Randy.Shared.Ventas", b =>
                 {
-                    b.Navigation("CobrosDetalles");
+                    b.Navigation("CobrosDetalle");
                 });
 #pragma warning restore 612, 618
         }

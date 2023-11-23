@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Parcial2_AP1_Randy.Shared;
 
 namespace Parcial2_AP1_Randy.Server.Controllers
 {

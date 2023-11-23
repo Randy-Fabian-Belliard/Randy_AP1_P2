@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Parcial2_AP1_Randy.Server.Migrations
 {
     /// <inheritdoc />
-    public partial class inicial : Migration
+    public partial class Inicial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -27,6 +27,20 @@ namespace Parcial2_AP1_Randy.Server.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Cobros",
+                columns: table => new
+                {
+                    CobroId = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Fecha = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    Observacion = table.Column<string>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Cobros", x => x.CobroId);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Ventas",
                 columns: table => new
                 {
@@ -35,32 +49,11 @@ namespace Parcial2_AP1_Randy.Server.Migrations
                     Fecha = table.Column<DateTime>(type: "TEXT", nullable: false),
                     ClienteId = table.Column<int>(type: "INTEGER", nullable: false),
                     Monto = table.Column<double>(type: "REAL", nullable: false),
-                    Balance = table.Column<double>(type: "REAL", nullable: false),
-                    Pagar = table.Column<bool>(type: "INTEGER", nullable: false),
-                    Cobrado = table.Column<double>(type: "REAL", nullable: false)
+                    Balance = table.Column<double>(type: "REAL", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Ventas", x => x.VentaId);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Cobros",
-                columns: table => new
-                {
-                    CobroId = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    Fecha = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    ClienteId = table.Column<int>(type: "INTEGER", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Cobros", x => x.CobroId);
-                    table.ForeignKey(
-                        name: "FK_Cobros_Clientes_ClienteId",
-                        column: x => x.ClienteId,
-                        principalTable: "Clientes",
-                        principalColumn: "ClienteId");
                 });
 
             migrationBuilder.CreateTable(
@@ -70,15 +63,22 @@ namespace Parcial2_AP1_Randy.Server.Migrations
                     DetalleId = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     CobroId = table.Column<int>(type: "INTEGER", nullable: false),
+                    ClienteId = table.Column<int>(type: "INTEGER", nullable: false),
                     VentaId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Observaciones = table.Column<string>(type: "TEXT", nullable: true),
-                    TotalFacturas = table.Column<double>(type: "REAL", nullable: false),
-                    TotalCobrado = table.Column<double>(type: "REAL", nullable: false),
-                    Pagar = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Cobrado = table.Column<double>(type: "REAL", nullable: false),
+                    Pagar = table.Column<bool>(type: "INTEGER", nullable: false),
+                    TotalFacturas = table.Column<int>(type: "INTEGER", nullable: false),
+                    TotalCobrado = table.Column<double>(type: "REAL", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_CobrosDetalle", x => x.DetalleId);
+                    table.ForeignKey(
+                        name: "FK_CobrosDetalle_Clientes_ClienteId",
+                        column: x => x.ClienteId,
+                        principalTable: "Clientes",
+                        principalColumn: "ClienteId",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_CobrosDetalle_Cobros_CobroId",
                         column: x => x.CobroId,
@@ -105,20 +105,20 @@ namespace Parcial2_AP1_Randy.Server.Migrations
 
             migrationBuilder.InsertData(
                 table: "Ventas",
-                columns: new[] { "VentaId", "Balance", "ClienteId", "Cobrado", "Fecha", "Monto", "Pagar" },
+                columns: new[] { "VentaId", "Balance", "ClienteId", "Fecha", "Monto" },
                 values: new object[,]
                 {
-                    { 1, 1000.0, 1, 0.0, new DateTime(2020, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 1000.0, false },
-                    { 2, 800.0, 1, 0.0, new DateTime(2020, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 900.0, false },
-                    { 3, 2000.0, 2, 0.0, new DateTime(2020, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 2000.0, false },
-                    { 4, 1800.0, 2, 0.0, new DateTime(2020, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 1900.0, false },
-                    { 5, 3000.0, 3, 0.0, new DateTime(2020, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 3000.0, false },
-                    { 6, 1900.0, 3, 0.0, new DateTime(2020, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 2900.0, false }
+                    { 1, 1000.0, 1, new DateTime(2020, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 1000.0 },
+                    { 2, 800.0, 1, new DateTime(2020, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 900.0 },
+                    { 3, 2000.0, 2, new DateTime(2020, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 2000.0 },
+                    { 4, 1800.0, 2, new DateTime(2020, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 1900.0 },
+                    { 5, 3000.0, 3, new DateTime(2020, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 3000.0 },
+                    { 6, 1900.0, 3, new DateTime(2020, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 2900.0 }
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Cobros_ClienteId",
-                table: "Cobros",
+                name: "IX_CobrosDetalle_ClienteId",
+                table: "CobrosDetalle",
                 column: "ClienteId");
 
             migrationBuilder.CreateIndex(
@@ -139,13 +139,13 @@ namespace Parcial2_AP1_Randy.Server.Migrations
                 name: "CobrosDetalle");
 
             migrationBuilder.DropTable(
+                name: "Clientes");
+
+            migrationBuilder.DropTable(
                 name: "Cobros");
 
             migrationBuilder.DropTable(
                 name: "Ventas");
-
-            migrationBuilder.DropTable(
-                name: "Clientes");
         }
     }
 }
