@@ -32,21 +32,12 @@ namespace Parcial2_AP1_Randy.Server.Controllers
         }
 
         // GET: api/Clientes/5
-        [HttpGet("{id}")]
+       [HttpGet("{id}")]
         public async Task<ActionResult<Clientes>> GetClientes(int id)
         {
-          if (_context.Clientes == null)
-          {
-              return NotFound();
-          }
-            var clientes = await _context.Clientes.FindAsync(id);
+            var ClienteD = await _context.Clientes.FindAsync(id);
+            return ClienteD!;
 
-            if (clientes == null)
-            {
-                return NotFound();
-            }
-
-            return clientes;
         }
 
         // PUT: api/Clientes/5
@@ -95,6 +86,7 @@ namespace Parcial2_AP1_Randy.Server.Controllers
             return CreatedAtAction("GetClientes", new { id = clientes.ClienteId }, clientes);
         }
 
+
         // DELETE: api/Clientes/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteClientes(int id)
@@ -114,6 +106,8 @@ namespace Parcial2_AP1_Randy.Server.Controllers
 
             return NoContent();
         }
+
+        
 
         private bool ClientesExists(int id)
         {
