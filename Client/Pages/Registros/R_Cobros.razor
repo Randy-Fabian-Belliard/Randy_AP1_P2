@@ -3,6 +3,8 @@
 @inject HttpClient httpClient
 @using System.Linq
 @using Parcial2_AP1_Randy.Shared
+@inject NotificationService notificationService
+
 
 <EditForm Model="cobros">
     <DataAnnotationsValidator />
@@ -269,14 +271,23 @@ public async Task Buscar()
         else
         {
 
-            ValidacionDetalle = "El CobroId no existe.";
+
+            return;
 
         }
     }
-    catch (Exception ex)
+    catch (Exception )
     {
 
-        ValidacionDetalle = $"Error al buscar el Cobro: {ex.Message}";
+      
+            var Mensaje = new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "No se encontró el cobro",
+                    Detail = "Ingrese un Id qu exista",
+                    Duration = 4_000
+                };
+            notificationService.Notify(Mensaje);
     }
 }
 
@@ -286,7 +297,14 @@ public async Task Guardar()
 
     if (cobros.CobrosDetalle.Count == 0)
     {
-        ValidacionDetalle = "Debe agregar al menos un detalle antes de guardar.";
+             var Mensaje = new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Detalle no agregado",
+                Detail = "Tienes que agregar el detalle",
+                Duration = 4_000
+            };
+            notificationService.Notify(Mensaje);
         return;
     }
 
@@ -294,7 +312,7 @@ public async Task Guardar()
 
     if (!response.IsSuccessStatusCode)
     {
-        // Manejar el caso en el que la solicitud no sea exitosa
+  
         return;
     }
 
@@ -302,10 +320,18 @@ public async Task Guardar()
 
     if (cobroDevuelto is not null)
     {
+        var Mensaje = new NotificationMessage
+    {
+        Severity = NotificationSeverity.Success,
+        Summary = "Guardado",
+        Detail = "Guardado correctamente",
+        Duration = 4_000
+    };
         cobros = cobroDevuelto;
         StateHasChanged();
         Nuevo();
         cobrosDetalle.Cobrado = aux;
+    notificationService.Notify(Mensaje);
     }
 }
 
@@ -351,7 +377,7 @@ public async Task Guardar()
         ValidacionDetalle = string.Empty;
         if (ClienteSeleccionado <= 0)
         {
-            ValidacionDetalle = "El cliente es oblicatorio";
+          ValidacionDetalle = "El cliente es oblicatorio";
         }
 
         if (VentaSeleccionada <= 0)
